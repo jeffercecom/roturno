@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String?  @unique
+  email     String?  @unique
+  password  String?
+  role      String   @default("ADVISOR")
+  blocked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  advisor   Advisor?
+  officeAdmin OfficeAdmin?
+  reviewedOfficeRequests OfficeChangeRequest[] @relation("ReviewedOfficeRequests")
+}
+
+model Advisor {
+  id           String    @id @default(cuid())
+  user         User      @relation(fields: [userId], references: [id])
+  userId       String    @unique
+  name         String
+  presentation String?
+  presentationStatus String @default("PENDING")
+  inPerson Boolean @default(false)
+  virtual Boolean @default(false)
+  atHome Boolean @default(false)
+  age Int?
+  eyeColor String?
+  skinColor String?
+  hairColor String?
+  hairType String?
+  heightCm Int?
+  approved     Boolean   @default(false)
+  photos       Photo[]
+  specialities AdvisorSpeciality[]
+  office       Office?   @relation(fields: [officeId], references: [id])
+  officeId     String?
+  presences    DailyPresence[]
+  officeChangeRequests OfficeChangeRequest[]
+  customAttributes AdvisorAttribute[]
+  serviceCategories AdvisorServiceCategory[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Speciality {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  approved Boolean @default(false)
+  advisors AdvisorSpeciality[]
+}
+
+model AdvisorSpeciality {
+  id           String    @id @default(cuid())
+  advisor      Advisor   @relation(fields: [advisorId], references: [id])
+  advisorId    String
+  speciality   Speciality @relation(fields: [specialityId], references: [id])
+  specialityId String
+  reviewStatus String @default("PENDING")
+  activeByAdvisor Boolean @default(true)
+  hiddenByOwner Boolean @default(false)
+  @@unique([advisorId, specialityId])
+}
+
+model Office {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  address   String?
+  admins    OfficeAdmin[]
+  advisors  Advisor[]
+  outgoingOfficeChanges OfficeChangeRequest[] @relation("FromOffice")
+  incomingOfficeChanges OfficeChangeRequest[] @relation("ToOffice")
+  isOpenDaily Boolean @default(true)
+  dailyOpening Boolean @default(true)
+  openToday Boolean @default(true)
+  continuous24Hours Boolean @default(false)
+  openingTime String @default("00:00")
+  closingTime String @default("23:59")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OfficeAdmin {
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String @unique
+  office   Office @relation(fields: [officeId], references: [id])
+  officeId String
+  blocked  Boolean @default(false)
+  substitute Boolean @default(false)
+}
+
+model DailyPresence {
+  id         String         @id @default(cuid())
+  advisor    Advisor        @relation(fields: [advisorId], references: [id])
+  advisorId  String
+  date       DateTime
+  status     String         @default("INACTIVE")
+  checkInAt  DateTime?
+  checkOutAt DateTime?
+  autoEnded  Boolean        @default(false)
+  createdAt  DateTime       @default(now())
+
+  @@index([advisorId, date])
+  @@unique([advisorId, date])
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  advisor   Advisor  @relation(fields: [advisorId], references: [id])
+  advisorId String
+  url       String
+  mediaType String   @default("IMAGE")
+  isFace    Boolean  @default(false)
+  isMain    Boolean  @default(false)
+  approved  Boolean  @default(false)
+  reviewStatus String @default("PENDING")
+  createdAt DateTime @default(now())
+}
+
+model OfficeChangeRequest {
+  id           String   @id @default(cuid())
+  advisor      Advisor  @relation(fields: [advisorId], references: [id])
+  advisorId    String
+  fromOffice   Office?  @relation("FromOffice", fields: [fromOfficeId], references: [id])
+  fromOfficeId String?
+  toOffice     Office   @relation("ToOffice", fields: [toOfficeId], references: [id])
+  toOfficeId   String
+  status       String   @default("PENDING")
+  reviewedBy   User?    @relation("ReviewedOfficeRequests", fields: [reviewedById], references: [id])
+  reviewedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AdvisorAttribute {
+  id        String  @id @default(cuid())
+  advisor   Advisor @relation(fields: [advisorId], references: [id])
+  advisorId String
+  name      String
+  value     String
+}
+
+model ServiceCategory {
+  id        String @id @default(cuid())
+  name      String @unique
+  active    Boolean @default(true)
+  durations ServiceCategoryDuration[]
+  advisors  AdvisorServiceCategory[]
+}
+
+model ServiceCategoryDuration {
+  id         String @id @default(cuid())
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+  minutes    Int
+  price      Float
+  @@unique([categoryId, minutes])
+}
+
+model AdvisorServiceCategory {
+  id         String @id @default(cuid())
+  advisor    Advisor @relation(fields: [advisorId], references: [id])
+  advisorId  String
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+  @@unique([advisorId, categoryId])
+}

@@ -1,0 +1,10 @@
+node_modules/
+.next/
+build/
+dist/
+.env
+.env*.local
+credenciales
+cookiejar.txt
+prisma/*.db
+prisma/*.db-journal

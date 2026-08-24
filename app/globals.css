@@ -1,0 +1,14 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #0f172a;
+}
+
+main { padding: 2rem; }
+
+.capture-hint { font-size: 0.9rem; color: #374151; }
