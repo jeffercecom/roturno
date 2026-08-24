@@ -8,3 +8,4 @@ credenciales
 cookiejar.txt
 prisma/*.db
 prisma/*.db-journal
+ignorar/
